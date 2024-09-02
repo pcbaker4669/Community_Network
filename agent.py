@@ -5,10 +5,10 @@ random.seed(123)
 
 
 class Agent:
-    def __init__(self, name, in_degree, word_metric):
+    def __init__(self, name, in_degree, ideological_score):
         self.name = name
         self.in_degree = in_degree
-        self.word_metric = word_metric
+        self.ideological_score = ideological_score
         self.community = -1
 
     def set_community(self, community):
@@ -23,24 +23,18 @@ class Agent:
     def get_in_degree(self):
         return self.in_degree
 
-    def increment_in_degree(self):
-        self.in_degree += 1
+    def set_ideological_score(self, score):
+        self.ideological_score = score
 
-    def set_word_metric(self, score):
-        self.word_metric = score
-
-    def get_word_metric(self):
-        return self.word_metric
-
-    def sort_priority(self):
-        return self.word_metric
+    def get_ideological_score(self):
+        return self.ideological_score
 
     def get_name(self):
         return self.name
 
     def __str__(self):
         return ("N: {}, In-D: {}, W-M: {}"
-                .format(self.name, self.in_degree, self.word_metric))
+                .format(self.name, self.in_degree, self.ideological_score))
 
 
 class SNA_Model:
@@ -49,7 +43,7 @@ class SNA_Model:
         self.count = 0
         self.nodes = {}
         self.tot_in_degrees = 0
-        self.word_metric_rng = 1
+
         self.alpha = 1.5  # Initial growth factor
         self.alpha_coefficient = .01  # used in older version
 
@@ -80,11 +74,6 @@ class SNA_Model:
         # Calculate the total of in-degrees raised to the power of alpha
         return sum(self.nodes[i].get_in_degree() ** self.alpha for i in self.nodes)
 
-    def get_node_att_prob_old(self, node):
-        self.update_alpha()
-        val = node.get_in_degree() ** self.alpha / self.tot_in_degrees
-        return val
-
     def get_node_att_prob(self, node):
         total_adjusted_in_degrees = self.get_total_adjusted_in_degrees()
         # Ensure total_adjusted_in_degrees is not zero to avoid division by zero
@@ -107,10 +96,10 @@ class SNA_Model:
             cnt += 1
             test_key = random.choice(keys)
             test_node = self.nodes[test_key]
-            diff_test = (node_to_match.get_word_metric() -
-                         test_node.get_word_metric())
-            diff_current = (node_to_match.get_word_metric() -
-                            current_node.get_word_metric())
+            diff_test = (node_to_match.get_ideological_score() -
+                         test_node.get_ideological_score())
+            diff_current = (node_to_match.get_ideological_score() -
+                            current_node.get_ideological_score())
             if abs(diff_test) < abs(diff_current):
                 test_prob = self.get_node_att_prob(test_node)
                 roll = random.random()
@@ -123,7 +112,7 @@ class SNA_Model:
         worst_score = 0
         node_to_return = None
         for n in lst_of_nodes:
-            test_sim = abs(node_to_match.get_word_metric() - n.get_word_metric())
+            test_sim = abs(node_to_match.get_ideological_score() - n.get_ideological_score())
             if test_sim >= worst_score:
                 worst_score = test_sim
                 node_to_return = n
@@ -141,10 +130,10 @@ class SNA_Model:
             random.shuffle(keys)
             for k in keys:
                 test_node = self.nodes[k]
-                diff_new = (node_to_match.get_word_metric() -
-                            test_node.get_word_metric())
-                diff_old = (node_to_match.get_word_metric() -
-                            old_target_node.get_word_metric())
+                diff_new = (node_to_match.get_ideological_score() -
+                            test_node.get_ideological_score())
+                diff_old = (node_to_match.get_ideological_score() -
+                            old_target_node.get_ideological_score())
                 if abs(diff_new) < abs(diff_old):
                     test_prob = self.get_node_att_prob(test_node)
                     roll = random.random()
@@ -170,7 +159,7 @@ class SNA_Model:
         lst = []
         for k in keys:
             lst.append(self.nodes[k])
-        lst = sorted(lst, key=lambda x: x.get_word_metric())
+        lst = sorted(lst, key=lambda x: x.get_ideological_score())
         return lst
 
     def get_in_degree_lst(self):
@@ -198,15 +187,15 @@ class SNA_Model:
         # go through each list, find the node and assign it a
         # community number list 0 is comm 0, etc
         for com in com_lst:
-            word_metrics_for_com = []
+            ideological_score_for_com = []
             for idx in com:
                 self.nodes[idx].set_community(com_group)
-                word_metrics_for_com.append(self.nodes[idx].get_word_metric())
+                ideological_score_for_com.append(self.nodes[idx].get_ideological_score())
 
             self.community_groups_cnt[com_group] = len(com)
             self.community_groups_means[com_group] = (
-                    sum(word_metrics_for_com) / len(com))
-            self.community_groups_std[com_group] = np.std(word_metrics_for_com)
+                    sum(ideological_score_for_com) / len(com))
+            self.community_groups_std[com_group] = np.std(ideological_score_for_com)
 
             com_group += 1
         val = sum(self.community_groups_std.values()) / len(self.community_groups_std.keys())

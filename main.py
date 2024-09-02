@@ -1,25 +1,24 @@
 import time
 import tkinter as tk
 from tkinter import *
-
 import random as rnd
 import model_mgr
 
 # originally 123
 rnd.seed(123)
 start_node_num = 4
-tot_nodes = 25
+tot_nodes = 30
 curr_num = 4
-run_mods = 0
-net_change = .05
+
+net_change = .1
 
 root = Tk()
-root.title("SNA Model")
+root.title("Community Network")
 tot_nodes_var = tk.StringVar()
-run_mods_var = tk.StringVar()
+
 net_change_var = tk.StringVar()
 tot_nodes_var.set(f"{tot_nodes}")
-run_mods_var.set(f"{run_mods}")
+
 net_change_var.set(f"{net_change}")
 m_mgr = model_mgr.SNA_Model_Mgr()
 
@@ -35,23 +34,16 @@ def init():
     m_mgr.set_parameters(t_nodes, n_change)
     m_mgr.setup()
     m_mgr.go()
-    m_mgr.draw_network(0)
+    m_mgr.draw_network()
     canvas.draw()
     canvas.flush_events()
-    m_mgr.draw_network(0)
-    canvas.draw()
 
 
-def create():
-    runs = int(run_mods_var.get())
-    # the first mod was created in the setup
-    for i in range(1, runs):
-        m_mgr.do_run_modifications()
-        m_mgr.draw_network(i-1)
-        canvas.draw()
-        canvas.flush_events()
-    m_mgr.draw_network(runs-1)
+def step():
+    m_mgr.do_run_modifications()
+    m_mgr.draw_network()
     canvas.draw()
+    canvas.flush_events()
 
 
 def exit_sna():
@@ -60,20 +52,18 @@ def exit_sna():
 
 button_frame = Frame(root)
 init_btn = tk.Button(button_frame, text="Initialize", command=lambda: init())
-create_btn = tk.Button(button_frame, text="Create", command=lambda: create())
+step_btn = tk.Button(button_frame, text="Step >>", command=lambda: step())
 tot_nodes_lbl = tk.Label(button_frame, text="Total Nodes:")
 tot_nodes_ent = tk.Entry(button_frame, textvariable=tot_nodes_var)
-run_mods_lbl = tk.Label(button_frame, text="Run Mods:")
-run_mods_ent = tk.Entry(button_frame, textvariable=run_mods_var)
+
 net_change_lbl = tk.Label(button_frame, text="Net Chg/Run:")
 net_change_ent = tk.Entry(button_frame, textvariable=net_change_var)
 
 init_btn.pack(side="left", padx=5)
-create_btn.pack(side="left", padx=5)
+step_btn.pack(side="left", padx=5)
 tot_nodes_lbl.pack(side="left")
 tot_nodes_ent.pack(side="left", padx=5)
-run_mods_lbl.pack(side="left")
-run_mods_ent.pack(side="left", padx=5)
+
 net_change_lbl.pack(side="left")
 net_change_ent.pack(side="left", padx=5)
 button_frame.pack(side="bottom", pady=5)
